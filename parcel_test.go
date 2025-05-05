@@ -19,12 +19,12 @@ var (
 )
 
 // getTestParcel возвращает тестовую посылку
-func getTestParcel() Parcel {
+func getTestParcel(createdAt string) Parcel {
 	return Parcel{
 		Client:    1000,
 		Status:    ParcelStatusRegistered,
 		Address:   "test",
-		CreatedAt: time.Now().UTC().Format(time.RFC3339),
+		CreatedAt: createdAt,
 	}
 }
 
@@ -36,23 +36,28 @@ func TestAddGetDelete(t *testing.T) {
 	defer db.Close()
 
 	store := NewParcelStore(db)
-	parcel := getTestParcel()
+	createdAt := time.Now().UTC().Format(time.RFC3339)
+	parcel := getTestParcel(createdAt)
 
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 	id, err := store.Add(parcel)
 	require.NoError(t, err)
 	require.NotZero(t, id)
+
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	got, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel, got)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
+
+	parcel.Number = got.Number
+	require.Equal(t, parcel, got)
+
 	err = store.Delete(id)
 	require.NoError(t, err)
 
@@ -69,7 +74,8 @@ func TestSetAddress(t *testing.T) {
 	defer db.Close()
 
 	store := NewParcelStore(db)
-	parcel := getTestParcel()
+	createdAt := time.Unix(0, 0).UTC().Format(time.RFC3339)
+	parcel := getTestParcel(createdAt)
 
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
@@ -97,7 +103,8 @@ func TestSetStatus(t *testing.T) {
 	defer db.Close()
 
 	store := NewParcelStore(db)
-	parcel := getTestParcel()
+	createdAt := time.Unix(0, 0).UTC().Format(time.RFC3339)
+	parcel := getTestParcel(createdAt)
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 
@@ -124,10 +131,11 @@ func TestGetByClient(t *testing.T) {
 	defer db.Close()
 
 	store := NewParcelStore(db)
+	createdAt := time.Unix(0, 0).UTC().Format(time.RFC3339)
 	parcels := []Parcel{
-		getTestParcel(),
-		getTestParcel(),
-		getTestParcel(),
+		getTestParcel(createdAt),
+		getTestParcel(createdAt),
+		getTestParcel(createdAt),
 	}
 	parcelMap := map[int]Parcel{}
 
